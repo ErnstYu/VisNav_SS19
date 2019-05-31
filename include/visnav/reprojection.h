@@ -90,7 +90,7 @@ struct BundleAdjustmentReprojectionCostFunctor {
     const std::shared_ptr<AbstractCamera<T>> cam =
         AbstractCamera<T>::from_data(cam_model, sIntr);
 
-    Eigen::Matrix<T, 3, 1> pc = sT_w_c.inverse() * sp_3d_w;
+    Eigen::Matrix<T, 3, 1> pc = T_w_c.inverse() * p_3d_w;
 
     residuals = p_2d - cam->project(pc);
 

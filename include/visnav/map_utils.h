@@ -137,38 +137,36 @@ int add_new_landmarks_between_cams(const TimeCamId& tcid0,
   // at the end of the function this will contain all newly added track ids
   std::vector<TrackId> new_track_ids;
 
-  // TODO SHEET 4: Triangulate all new features and add to the map
-
   opengv::bearingVectors_t bvs1, bvs2;
   for (auto tid : shared_track_ids)
-    if (landmarks.find(tid) == landmarks.end())
-    {
+    if (landmarks.find(tid) == landmarks.end()) {
       new_track_ids.push_back(tid);
-      
+
       const FeatureId fid0 = feature_tracks.at(tid).at(tcid0);
       const FeatureId fid1 = feature_tracks.at(tid).at(tcid1);
 
-      bvs1.push_back(
-          calib_cam.intrinsics[tcid0.second]->unproject(
-              feature_corners.at(tcid0).corners[fid0]));
-      bvs2.push_back(
-          calib_cam.intrinsics[tcid1.second]->unproject(
-              feature_corners.at(tcid1).corners[fid1]));
+      bvs1.push_back(calib_cam.intrinsics[tcid0.second]->unproject(
+          feature_corners.at(tcid0).corners[fid0]));
+      bvs2.push_back(calib_cam.intrinsics[tcid1.second]->unproject(
+          feature_corners.at(tcid1).corners[fid1]));
     }
 
-  Sophus::SE3d tform = calib_cam.T_i_c[tcid1.second] *
-                       calib_cam.T_i_c[tcid0.second].inverse();
-  
+  Sophus::SE3d tform =
+      cameras.at(tcid0).T_w_c.inverse() * cameras.at(tcid1).T_w_c;
+
   opengv::relative_pose::CentralRelativeAdapter adapter(
       bvs1, bvs2, tform.translation(), tform.rotationMatrix());
 
-  for (size_t idx = 0; idx < new_track_ids.size(); ++idx)
-  {
-    opengv::point_t pt = opengv::triangulation::triangulate(adapter, idx);
-
+  for (size_t i = 0; i < new_track_ids.size(); ++i) {
     Landmark lmark;
-    
-    Landmarks[new_track_ids[idx]] = lmark;
+    lmark.p = cameras.at(tcid0).T_w_c *
+              opengv::triangulation::triangulate(adapter, i);
+
+    for (auto feature : feature_tracks.at(new_track_ids[i]))
+      if (cameras.find(feature.first) != cameras.end())
+        lmark.obs.emplace(feature);
+
+    landmarks[new_track_ids[i]] = lmark;
   }
 
   return new_track_ids.size();
@@ -194,17 +192,16 @@ bool initialize_scene_from_stereo_pair(const TimeCamId& tcid0,
     return false;
   }
 
-  // TODO SHEET 4: Initialize scene (add initial cameras and landmarks)
   Camera cam0, cam1;
   cam0.T_w_c = Sophus::SE3d(Eigen::Matrix4d::Identity());
-  cam1.T_w_c = calib_cam.T_i_c[tcid1.second] * calib_cam.T_i_c[tcid0.second].inverse();
+  cam1.T_w_c =
+      calib_cam.T_i_c[tcid0.second].inverse() * calib_cam.T_i_c[tcid1.second];
 
   cameras[tcid0] = cam0;
   cameras[tcid1] = cam1;
 
-  add_new_landmarks_between_cams(tcid0, tcid1, calib_cam,
-                                 feature_corners, feature_tracks,
-                                 cameras, landmarks);
+  add_new_landmarks_between_cams(tcid0, tcid1, calib_cam, feature_corners,
+                                 feature_tracks, cameras, landmarks);
 
   return true;
 }
@@ -230,7 +227,45 @@ void localize_camera(
     Sophus::SE3d& T_w_c, std::vector<TrackId>& inlier_track_ids) {
   inlier_track_ids.clear();
 
-  // TODO SHEET 4: Localize a new image in a given map
+  double flen = (calib_cam.intrinsics[tcid.second]->data()[0] +
+                 calib_cam.intrinsics[tcid.second]->data()[1]) /
+                2;
+  double ransac_thresh =
+      1.0 -
+      cos(atan(reprojection_error_pnp_inlier_threshold_pixel * 0.5 / flen));
+
+  opengv::bearingVectors_t bvs;
+  opengv::points_t pts;
+  for (auto tid : shared_track_ids) {
+    const FeatureId fid = feature_tracks.at(tid).at(tcid);
+    bvs.push_back(calib_cam.intrinsics[tcid.second]->unproject(
+        feature_corners.at(tcid).corners[fid]));
+    pts.push_back(landmarks.at(tid).p);
+  }
+
+  using namespace opengv::sac_problems::absolute_pose;
+
+  opengv::absolute_pose::CentralAbsoluteAdapter adapter(bvs, pts);
+
+  std::shared_ptr<AbsolutePoseSacProblem> absposeproblem_ptr(
+      new AbsolutePoseSacProblem(adapter, AbsolutePoseSacProblem::KNEIP));
+
+  opengv::sac::Ransac<AbsolutePoseSacProblem> ransac;
+
+  ransac.sac_model_ = absposeproblem_ptr;
+  ransac.threshold_ = ransac_thresh;
+  ransac.computeModel();
+
+  opengv::transformation_t tform;
+  absposeproblem_ptr->optimizeModelCoefficients(
+      ransac.inliers_, ransac.model_coefficients_, tform);
+
+  std::vector<int> inliers_;
+  absposeproblem_ptr->selectWithinDistance(tform, ransac_thresh, inliers_);
+
+  T_w_c = Sophus::SE3d(tform.block<3, 3>(0, 0), tform.block<3, 1>(0, 3));
+
+  for (auto idx : inliers_) inlier_track_ids.push_back(shared_track_ids[idx]);
 }
 
 struct BundleAdjustmentOptions {
@@ -258,7 +293,37 @@ void bundle_adjustment(const Corners& feature_corners,
                        Landmarks& landmarks) {
   ceres::Problem problem;
 
-  // TODO SHEET 4: Setup optimization problem
+  for (auto& lmark : landmarks) {
+    for (const auto ftrack : lmark.second.obs) {
+      const Eigen::Vector2d& p_2d =
+          feature_corners.at(ftrack.first).corners[ftrack.second];
+
+      BundleAdjustmentReprojectionCostFunctor* barcf =
+          new BundleAdjustmentReprojectionCostFunctor(
+              p_2d, calib_cam.intrinsics[ftrack.first.second]->name());
+
+      ceres::CostFunction* cost_function = new ceres::AutoDiffCostFunction<
+          BundleAdjustmentReprojectionCostFunctor, 2,
+          Sophus::SE3d::num_parameters, Sophus::SE3d::num_parameters, 8>(barcf);
+
+      ceres::HuberLoss* lost_function =
+          options.use_huber ? new ceres::HuberLoss(options.huber_parameter)
+                            : NULL;
+
+      problem.AddResidualBlock(
+          cost_function, lost_function, cameras[ftrack.first].T_w_c.data(),
+          lmark.second.p.data(),
+          calib_cam.intrinsics[ftrack.first.second]->data());
+    }
+  }
+
+  for (auto tcid : fixed_cameras)
+    problem.SetParameterBlockConstant(cameras[tcid].T_w_c.data());
+
+  if (!options.optimize_intrinsics) {
+    problem.SetParameterBlockConstant(calib_cam.intrinsics[0]->data());
+    problem.SetParameterBlockConstant(calib_cam.intrinsics[1]->data());
+  }
 
   // Solve
   ceres::Solver::Options ceres_options;
