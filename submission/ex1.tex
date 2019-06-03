@@ -1,0 +1,50 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{0pt}
+
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+
+\begin{document}
+    Boqian Yu 03708925
+	\section{Exercise 1}
+        \subsection{Why would a SLAM system need a map?}
+        The need to use a map of the environment is twofold. First, the map is often required to support other tasks; for instance, a map can inform path planning or provide an intuitive visualization for a human operator. Second, the map allows limiting the error committed in estimating the state of the robot. In the absence of a map, dead-reckoning would quickly drift over time; on the other hand, using a map, e.g., a set of distinguishable landmarks, the robot can “reset” its localization error by revisiting known areas (so-called \textit{loop closure}).
+        \subsection{SLAM technology into real-world applications?}
+        SLAM finds applications in all scenarios in which a prior map is not available and needs to be built. The popularity of the SLAM problem is connected with the emergence of indoor applications of mobile robotics. Indoor operation rules out the use of GPS to bound the localization error; furthermore, SLAM provides an appealing alternative to user-built maps, showing that robot operation is possible in the absence of an ad hoc localization infrastructure.
+        
+        SLAM is needed for many applications that, either implicitly or explicitly, do require a globally consistent map. For instance, in many military and civilian applications, the goal of the robot is to explore an environment and report a map to the human operator, ensuring that full coverage of the environment has been obtained. Another example is the case in which the robot has to perform structural inspection (of a building, bridge, etc.); also in this case, a globally consistent three-dimensional (3-D) reconstruction is a requirement for successful operation.
+        \subsection{Describe the history of SLAM.}
+        The classical age (1986–2004): introduction of the main probabilistic formulations for SLAM, including approaches based on extended Kalman filters (EKF), Rao-Blackwellized particle filters, and maximum likelihood estimation; basic challenges connected to efficiency and robust data association.
+        
+        The algorithmic-analysis age (2004–2015): study of fundamental properties of SLAM, including observability, convergence, and consistency. In this period, the key role of sparsity toward efficient SLAM solvers was also understood, and the main open-source SLAM libraries were developed.
+        
+    \pagebreak
+    \section{Exercise 2}
+    \begin{enumerate}
+        \item Specify a search path for CMake modules to be loaded by the include() or find\_package() commands before checking the default modules that come with CMake.
+        \item Specify the C++ standard whose features are requested to build this target, set the value of CXX\_STANDARD as a requirement of building, and specify not to use compiler specific extensions.
+        \item Set build types and their corresponding building variables (optimization, initialization etc.). Set the maximum number of template instantiation notes for a single warning or error. Set the display option of warnings. Set the way to tune the generated code for hardware micro-architecture.
+        \item Add an executable target to be built from the source files listed in the command invocation, and specify libraries to use when linking this target and its dependents.
+    \end{enumerate}
+    \section{Exercise 3}
+    \textbf{Proof}:
+    
+    We already have $\boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} = \boldsymbol{a} \boldsymbol{a}^{T} - \boldsymbol{I}$ and $\boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} = -\boldsymbol{a}^{\wedge}$,
+    \begin{equation*}
+    \begin{aligned}
+        \sum_{n=0}^{\infty} \frac{1}{(n+1)!} \left(\theta \boldsymbol{a}^{\wedge} \right)^{n}
+        &=\boldsymbol{I} + \frac{1}{2!} \theta \boldsymbol{a}^{\wedge} + \frac{1}{3!} \theta^{2} \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} + \frac{1}{4!} \theta^{3} \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} + \frac{1}{5!} \theta^{4} \left(\boldsymbol{a}^{\wedge}\right)^{4} + \ldots \\
+        &=\boldsymbol{a} \boldsymbol{a}^{T} - \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} + \frac{1}{2!} \theta \boldsymbol{a}^{\wedge} + \frac{1}{3!} \theta^{2} \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} - \frac{1}{4!} \theta^{3} \boldsymbol{a}^{\wedge} - \frac{1}{5!} \theta^{4}\left(\boldsymbol{a}^{\wedge}\right)^{2} + \ldots \\
+        &=\boldsymbol{a} \boldsymbol{a}^{T}+\left(\frac{1}{2} -\frac{1}{4!} \theta^{2}+\frac{1}{6!} \theta^{4}-\ldots\right)\theta \boldsymbol{a}^{\wedge}-\left(1-\frac{1}{3!} \theta^{2}+\frac{1}{5!} \theta^{4}-\ldots\right) \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} \\
+        &=\boldsymbol{a} \boldsymbol{a}^{T} + \frac{1-\cos \theta}{\theta} \boldsymbol{a}^{\wedge} - \frac{\sin \theta}{\theta} \boldsymbol{a}^{\wedge} \boldsymbol{a}^{\wedge} \\
+        &=\boldsymbol{a} \boldsymbol{a}^{T} - \frac{\sin \theta}{\theta} (\boldsymbol{a} \boldsymbol{a}^{T} - \boldsymbol{I}) + \frac{1-\cos \theta}{\theta} \boldsymbol{a}^{\wedge} \\
+        &=\frac{\sin \theta}{\theta} \boldsymbol{I}+\left(1-\frac{\sin \theta}{\theta}\right) \boldsymbol{a} \boldsymbol{a}^{T}+\frac{1-\cos \theta}{\theta} \boldsymbol{a}^{\wedge}
+    \end{aligned}
+    \end{equation*}
+    
+\end{document}

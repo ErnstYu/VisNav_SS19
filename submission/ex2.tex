@@ -1,0 +1,47 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{0pt}
+
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+
+\begin{document}
+    Boqian Yu 03708925
+	\section{Exercise 1}
+        \texttt{test\_ex2.cpp} tests the camera classes (\texttt{PinholeCamera}, \texttt{ExtendedUnifiedCamera}, \texttt{DoubleSphereCamera} and \texttt{KannalaBrandt4Camera}) with $21\times 21$ points to see if the \texttt{project} and \texttt{unproject} functions are correctly implemented by comparing the original coordinates with coordinates after \texttt{project} and \texttt{unproject}.
+    
+    \section{Exercise 2}
+        Curve-fitting uses a \textbf{CostFunction} to define the error of each observation. Moreover, robust curve-fitting can deal with outliers by introducing a \textbf{LossFunction} to reduce the influence of residual blocks with high residuals (usually corresponding to outliers), thus can give more robust results.
+    
+    \section{Exercise 3}
+        \textbf{Command line parameters}:
+        
+        \texttt{--show-gui}: Specify if the GUI should be shown (default) or not.
+        
+        \texttt{--dataset-path}: Specify the dataset path, which is a requirement to run the program.
+        
+        \texttt{--cam-model}: Specify the camera model to be used. Possible values are \texttt{pinhole}, \texttt{ds}, \texttt{eucm}, \texttt{kb4}, and the default value is \texttt{ds}.
+        
+        \textbf{Calibration results on different camera models}:
+        
+        The results of calibration on different camera models are listed in Table.\ref{calib_res} with the following criteria: \textbf{Final cost} (remaining error after calibration), \textbf{Iterations} (number of iterations taken before convergence), \textbf{Running time} (time consumed for the whole calibration process)
+        
+        Among these criteria, the final cost is the most appropriate measure to determine how well the camera models fit the lenses, because it directly reflects the quality of the calibration. It can be seen that the pinhole model yields much worse results than the other three models, and that the other three models can all give similar (and acceptable) results.
+        \begin{table}[h]
+            \renewcommand{\arraystretch}{1.4}
+            \caption{Calibration results on different camera models}
+            \label{calib_res}
+            \centering
+            \begin{tabular}{c|c|c|c|c}
+                Measures & pinhole & ds & eucm & kb4 \\
+                \hline
+                Final cost   & 156573.5 & 162.7482 & 162.7604 & 161.9844 \\
+                Iterations   &       16 &       15 &        7 &        8 \\
+                Running time & 1.015199 & 0.874160 & 0.493556 & 0.558785
+            \end{tabular}
+        \end{table}
+\end{document}

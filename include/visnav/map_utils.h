@@ -293,7 +293,17 @@ void bundle_adjustment(const Corners& feature_corners,
                        Landmarks& landmarks) {
   ceres::Problem problem;
 
+  problem.AddParameterBlock(calib_cam.intrinsics[0]->data(), 8);
+  problem.AddParameterBlock(calib_cam.intrinsics[1]->data(), 8);
+
+  for (auto cam : cameras)
+    problem.AddParameterBlock(cameras[cam.first].T_w_c.data(),
+                              Sophus::SE3d::num_parameters,
+                              new Sophus::test::LocalParameterizationSE3);
+
   for (auto& lmark : landmarks) {
+    problem.AddParameterBlock(lmark.second.p.data(), 3);
+
     for (const auto ftrack : lmark.second.obs) {
       const Eigen::Vector2d& p_2d =
           feature_corners.at(ftrack.first).corners[ftrack.second];
@@ -304,7 +314,7 @@ void bundle_adjustment(const Corners& feature_corners,
 
       ceres::CostFunction* cost_function = new ceres::AutoDiffCostFunction<
           BundleAdjustmentReprojectionCostFunctor, 2,
-          Sophus::SE3d::num_parameters, Sophus::SE3d::num_parameters, 8>(barcf);
+          Sophus::SE3d::num_parameters, 3, 8>(barcf);
 
       ceres::HuberLoss* lost_function =
           options.use_huber ? new ceres::HuberLoss(options.huber_parameter)

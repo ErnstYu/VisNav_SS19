@@ -1,0 +1,35 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{0pt}
+
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+
+\begin{document}
+    Boqian Yu 03708925\\
+	
+    \textbf{Derivation:}
+    
+    Let $P_L \triangleq O_L X$ and $P_R \triangleq O_R X$, we have:
+    $$P_R = R P_L + t,$$
+    which implies that $P_R$ and $RP_L+t$ are colinear. We have:
+    \begin{equation*}
+    \begin{aligned}
+        0 = (R P_L + t) \times P_R&= (R P_L) \times P_R + t \times P_R \\
+         &= (RP_L) \times P_R + t \times (RP_L + t) \\
+         &= (RP_L) \times P_R + t \times (RP_L) \\
+        \text{multiply $P_R^T$ on both sides} \\
+        0&= P_R^T \cdot \left((R P_L) \times P_R \right) + P_R^T \cdot \left( t \times (RP_L) \right) \\
+         &= P_R^T \cdot \left( t \times (RP_L) \right) \\
+         &= P_R^T \cdot [t]_{\times} R \cdot P_L
+    \end{aligned}
+    \end{equation*}
+    where $[t]_{\times} \cdot (R P_L) = t \times (R P_L)$.
+    
+    Going back to the definition of essential matrix, we have $E = [t]_{\times}R$
+\end{document}
