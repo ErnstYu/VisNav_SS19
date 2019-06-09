@@ -296,10 +296,18 @@ void bundle_adjustment(const Corners& feature_corners,
   problem.AddParameterBlock(calib_cam.intrinsics[0]->data(), 8);
   problem.AddParameterBlock(calib_cam.intrinsics[1]->data(), 8);
 
-  for (auto cam : cameras)
-    problem.AddParameterBlock(cameras[cam.first].T_w_c.data(),
+  if (!options.optimize_intrinsics) {
+    problem.SetParameterBlockConstant(calib_cam.intrinsics[0]->data());
+    problem.SetParameterBlockConstant(calib_cam.intrinsics[1]->data());
+  }
+
+  for (auto& cam : cameras) {
+    problem.AddParameterBlock(cam.second.T_w_c.data(),
                               Sophus::SE3d::num_parameters,
                               new Sophus::test::LocalParameterizationSE3);
+    if (fixed_cameras.find(cam.first) != fixed_cameras.end())
+      problem.SetParameterBlockConstant(cam.second.T_w_c.data());
+  }
 
   for (auto& lmark : landmarks) {
     problem.AddParameterBlock(lmark.second.p.data(), 3);
@@ -325,14 +333,6 @@ void bundle_adjustment(const Corners& feature_corners,
           lmark.second.p.data(),
           calib_cam.intrinsics[ftrack.first.second]->data());
     }
-  }
-
-  for (auto tcid : fixed_cameras)
-    problem.SetParameterBlockConstant(cameras[tcid].T_w_c.data());
-
-  if (!options.optimize_intrinsics) {
-    problem.SetParameterBlockConstant(calib_cam.intrinsics[0]->data());
-    problem.SetParameterBlockConstant(calib_cam.intrinsics[1]->data());
   }
 
   // Solve

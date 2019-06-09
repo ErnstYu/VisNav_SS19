@@ -1,0 +1,33 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{0pt}
+
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+
+\begin{document}
+    Boqian Yu 03708925
+	\section{Exercise 1}
+        Loop until all frames are processed:
+        \begin{itemize}
+            \item Project landmarks to the current frame (left image)
+            \item Detect keypoints and calculate descriptors for both left and right images
+            \item Match keypoints and select inliers
+            \item Match landmarks to keypoints (left image)
+            \item Calculate camera pose via matches between landmarks and keypoints
+            \item (If keyframe) Add keypoints in the current frame to landmarks
+            \item (If keyframe) Remove old landmarks and optimize the active map
+        \end{itemize}
+        
+    \section{Exercise 3}
+        Instead of optimizing the whole map in each iteration (as in \texttt{sfm}), this \texttt{optimize} function runs only on keyframes using the local landmarks (the active map) to refine results. Also, it only adds new landmarks (from a keyframe) when the number of active inliers is smaller than \texttt{new\_kf\_min\_inliers}. The optimization of a keyframe runs parallel with the localization of non-keyframe images.
+        
+        \texttt{opt\_running} indicates whether an optimization thread is still running, and \texttt{opt\_finished} indicates whether an optimization thread is already finished and variables (landmarkss, cameras, intrinsics) are already updated (ready to add new keyframe). These two variables control the selection of new keyframes and guarantee the parallel processing as stated above.
+        
+        Once removed, a new keyframe can be taken before the former optimization finishes, and the map variables may not be properly updated before processing latter frames.
+\end{document}
