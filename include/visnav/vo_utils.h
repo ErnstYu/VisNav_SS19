@@ -211,13 +211,6 @@ void remove_old_keyframes(const TimeCamId tcidl, const int max_num_kfs,
                           std::set<FrameId>& kf_frames) {
   kf_frames.emplace(tcidl.first);
 
-  std::set<FrameId> pairs;
-  for (auto kv : cameras)
-    if (cameras.count(std::make_pair(kv.first.first, 1 - kv.first.second)) > 0)
-      pairs.emplace(kv.first.first);
-
-  if (pairs.size() <= max_num_kfs) return;
-
   while (kf_frames.size() > max_num_kfs) {
     for (auto cam : cameras) {
       if (cam.first.first == *(kf_frames.begin())) {
